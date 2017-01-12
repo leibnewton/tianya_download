@@ -12,6 +12,7 @@ class TianyaFetcher(object):
         
     def openSoup(self, url,code):
         print 'fetching [%s] ...' % url,
+        sys.stdout.flush()
         page = urllib2.urlopen(url)
         content = page.read()
         print ' success, size %d' % len(content)
