@@ -22,13 +22,13 @@ class TianyaFetcher(object):
         return soup
 
     def IsValidContent(self, content): # filter out invalid ones
-        if len(content) < 100:  # filter out  too short ones
+        if len(content) < 400:  # filter out  too short ones
             return False
         fstSeg = content[:40]
-        if u'作者：' in fstSeg and u'日期：' in fstSeg:
+        if u'作者：' in fstSeg or u'日期：' in fstSeg:
             return False
         fstSeg = fstSeg.lstrip()
-        if fstSeg[0] == u'@' and u'楼' in fstSeg:
+        if fstSeg[0] == u'@':
             return False
         return True
 
