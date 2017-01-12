@@ -40,7 +40,7 @@ class TianyaFetcher(object):
         s = ''.join(contents).strip()
         parts = s.split('|')
         floor = '-'.join([item.strip() for item in parts if u'楼' in item])
-        decostr = '_-_' * 12
+        decostr = '_-_' * 2
         return '%s %s %s%s' % (decostr, floor, decostr, os.linesep)
         
     def parseHtml(self, soup):
@@ -74,7 +74,7 @@ class TianyaFetcher(object):
             try:
                 soup = self.openSoup(url,'utf-8')
             except Exception, ex:
-                print ' failed for "%s", retry' % ex.args
+                print ' failed for "%s", retry' % ex
         if not self.article_authname:
             self.article_authname, self.article_title = self.getAuthor(soup)
         pageContent = self.parseHtml(soup)
@@ -100,7 +100,7 @@ class TianyaFetcher(object):
         return url[url.rindex("/")+1:].replace("shtml","txt")
 
     def getPageLine(self, page):
-        decostr = '===' * 8
+        decostr = '===' * 2
         return u'%s 第 %s 页 %s%s' % (decostr, page, decostr, os.linesep)
         
     def getHtml(self, url, count = sys.maxint):
