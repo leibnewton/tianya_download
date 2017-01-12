@@ -9,7 +9,8 @@ def openSoup(url,code):
     page = urllib2.urlopen(url)
     content = page.read()
     print '[%s] fetched, size %d' % (url, len(content))
-    content = content.replace('<br>', os.linesep).replace('<BR>', os.linesep)
+    for newline in ['<br>\n', '<br>\r\n', '<br>', '<BR>']:
+        content = content.replace(newline, os.linesep)
     soup = BeautifulSoup(content,'lxml',from_encoding=code)
     return soup
 
@@ -58,7 +59,7 @@ def getNextPage(soup):
     if nextlink != None:
         return "http://bbs.tianya.cn"+nextlink["href"]
     else:
-        return 'OVER'
+        return ''
     
 def getAuthor(soup):
     div = soup.find(name='div', id="post_head")
@@ -69,23 +70,27 @@ def getAuthor(soup):
 def makeFilename(url):
     return url[url.rindex("/")+1:].replace("shtml","txt")
 
+def getPageLine(page):
+    decostr = '===' * 8
+    return u'%s 第 %s 页 %s%s' % (decostr, page, decostr, os.linesep)
+
 def getHtml(url):
     filename = makeFilename(url)
     
     p = 1
     fp = codecs.open(filename,'w','utf-8')
-    title = ''
-    while True:
+    authname = title = ''
+    while url:
         soup = openSoup(url,'utf-8')
-        authname, title = getAuthor(soup)
+        if not authname:
+            authname, title = getAuthor(soup)
+        fp.write(getPageLine(p))
         readHtml(soup,fp,authname)
         fp.flush()
         print 'PAGE#%d OK' % p
         url = getNextPage(soup)
-        if url == 'OVER' :
-            break
         p = p + 1
-       
+
     print '*** Article completely fetched. ***'
     fp.close()
     if title:
