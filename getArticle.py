@@ -1,13 +1,16 @@
 #_*_coding:utf-8-*-
+import os
 import urllib2
 import traceback
 import codecs
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 def openSoup(url,code):
     page = urllib2.urlopen(url)
-    soup = BeautifulSoup(page,fromEncoding=code)#,fromEncoding="gb2312"
-    #soup = BeautifulSoup(page,code)
+    content = page.read()
+    print '[%s] fetched, size %d' % (url, len(content))
+    content = content.replace('<br>', os.linesep).replace('<BR>', os.linesep)
+    soup = BeautifulSoup(content,'lxml',from_encoding=code)
     return soup
 
 def getContentFromDiv(contents):
@@ -19,7 +22,7 @@ def getContentFromDiv(contents):
             pass
     
     s = s.lstrip().rstrip()
-    if len(s) < 50:
+    if len(s) < 50: # filter out short ones
         return ""
     else:
         return "    "+s+"\r\n"+"\r\n"
@@ -41,7 +44,7 @@ def readHtml(soup,fp,authname):
     
     fp.write(pageContent)
    
-def getNextPage(soup,pno):
+def getNextPage(soup):
     nextlink = soup.find(name="a",attrs={"class":"js-keyboard-next"})
     if nextlink != None:
         return "http://bbs.tianya.cn"+nextlink["href"]
@@ -51,28 +54,31 @@ def getNextPage(soup,pno):
 def getAuthor(soup):
     div = soup.find(name='div', id="post_head")
     link = div.find(name="a",attrs={"class":"js-vip-check"})
-    return link["uname"]
+    title = div.find(name='h1')
+    return (link["uname"], title.text.strip())
 
 def makeFilename(url):
-    return url[url.rindex("/"):][1:].replace("shtml","txt")
+    return url[url.rindex("/")+1:].replace("shtml","txt")
 
 def getHtml(url):
     filename = makeFilename(url)
     
     p = 1
     fp = codecs.open(filename,'w','utf-8')
+    title = ''
     while True:
         soup = openSoup(url,'utf-8')
-        authname = getAuthor(soup)
+        authname, title = getAuthor(soup)
         readHtml(soup,fp,authname)
-        url = getNextPage(soup,p+1)
+        print 'PAGE#%d OK' % p
+        url = getNextPage(soup)
         if url == 'OVER' :
             break
-        print 'PAGE '+str(p)+' OK'
         p = p + 1
        
-    print 'It\'s Over'
+    print '*** Article completely fetched. ***'
     fp.close()
+    if title: os.rename(filename, title+".txt")
 
 if __name__ == '__main__':
-    getHtml('http://bbs.tianya.cn/post-worldlook-1219340-1.shtml')
+    getHtml('http://bbs.tianya.cn/post-free-2071655-1.shtml')
